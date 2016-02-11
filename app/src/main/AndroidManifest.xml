@@ -36,6 +36,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".activity.ResearchListActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"/>
+        <activity android:name=".activity.CategoryActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.ResearchDetailActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.scan.ScanActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.scan.ScanMainActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.scan.ScanResultActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".activity.scan.ScanCaptureActivity"
+            android:screenOrientation="portrait"/>
     </application>
 
 </manifest>

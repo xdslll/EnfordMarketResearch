@@ -3,5 +3,29 @@
     <string name="login_text">登录</string>
     <string name="login_user_hint">请输入工号</string>
     <string name="login_pwd_hint">请输入密码</string>
-    <string name="login_error_text">用户名或密码不能为空</string>
+    <string name="login_error_empty_user_pwd">用户名或密码不能为空</string>
+    <string name="research_list_text">商品市调清单</string>
+    <string name="research_list_start_date">开始时间</string>
+    <string name="research_list_end_date">结束时间</string>
+    <string name="research_list_dept">调研门店</string>
+    <string name="research_list_comp">调研门店</string>
+    <string name="research_list_cod_number">调研商品总数</string>
+    <string name="research_list_finish_percent">完成进度</string>
+    <string name="research_list_reseach">开始调研</string>
+    <string name="category_title_text">品类</string>
+    <string name="research_list_item_add_price">填写价格</string>
+    <string name="login_failed">登录失败，请稍候重试</string>
+    <string name="research_list_item_edit_price">修改价格</string>
+    <string name="add_price_title">请输入价格</string>
+    <string name="add_price_prompt_price_title">促销价:</string>
+    <string name="add_price_prompt_price_hint">请输入促销价</string>
+    <string name="add_price_origin_price_title">原价:</string>
+    <string name="add_price_orgin_price_hint">请输入原价</string>
+    <string name="add_price_remark_title">备注:</string>
+    <string name="add_price_remark_hint">此处可添加商品备注</string>
+    <string name="add_price_confirm">确定</string>
+    <string name="add_price_miss_tag">是否缺货:</string>
+    <string name="add_price_miss_text">缺货</string>
+
+    <string name="scan_tips">\"将二维码图片对准扫描框即可自动扫描\"</string>
 </resources>
