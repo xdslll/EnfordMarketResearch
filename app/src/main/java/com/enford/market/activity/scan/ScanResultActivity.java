@@ -20,7 +20,7 @@ public class ScanResultActivity extends BaseActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_result);
+		setContentView(R.layout.scan_result);
 
 		Bundle extras = getIntent().getExtras();
 

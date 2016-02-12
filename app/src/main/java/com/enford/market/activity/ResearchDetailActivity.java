@@ -18,7 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.enford.market.R;
-import com.enford.market.activity.scan.ScanActivity;
+import com.enford.market.activity.scan.ScanCaptureActivity;
 import com.enford.market.adapter.ResearchDetailAdapter;
 import com.enford.market.util.LogUtil;
 
@@ -35,14 +35,14 @@ import se.emilsjolander.stickylistheaders.StickyListHeadersListView;
  */
 public class ResearchDetailActivity extends BaseActivity {
 
-    ExpandableStickyListHeadersListView mListResearchDetail;
-    ResearchDetailAdapter mAdapter;
-    WeakHashMap<View,Integer> mOriginalViewHeightPool = new WeakHashMap<View, Integer>();
+    private ExpandableStickyListHeadersListView mListResearchDetail;
+    private ResearchDetailAdapter mAdapter;
+    private WeakHashMap<View,Integer> mOriginalViewHeightPool = new WeakHashMap<View, Integer>();
 
-    ImageButton mBtnScan;
-    TextView mTxtTitle;
+    private ImageButton mBtnScan;
+    private TextView mTxtTitle;
 
-    PopupWindow mPopupAddPrice;
+    private PopupWindow mPopupAddPrice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +79,7 @@ public class ResearchDetailActivity extends BaseActivity {
         mBtnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(mCtx, ScanActivity.class));
+                startActivity(new Intent(mCtx, ScanCaptureActivity.class));
             }
         });
 
@@ -98,15 +98,6 @@ public class ResearchDetailActivity extends BaseActivity {
                         .show();
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        for (int i = 0; i < mAdapter.getCount(); i++) {
-            long headerId = mAdapter.getHeaderId(i);
-            mListResearchDetail.collapse(headerId);
-        }
     }
 
     //animation executor

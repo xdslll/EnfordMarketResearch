@@ -1,6 +1,9 @@
 package com.enford.market.model;
 
-public class EnfordSystemUser {
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class EnfordSystemUser implements Parcelable {
 
     private Integer id;
 
@@ -111,4 +114,51 @@ public class EnfordSystemUser {
     public void setDeptName(String deptName) {
         this.deptName = deptName;
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(this.id);
+        dest.writeString(this.username);
+        dest.writeString(this.password);
+        dest.writeString(this.email);
+        dest.writeString(this.name);
+        dest.writeValue(this.orgId);
+        dest.writeValue(this.roleId);
+        dest.writeValue(this.type);
+        dest.writeValue(this.deptId);
+        dest.writeString(this.orgName);
+        dest.writeString(this.deptName);
+    }
+
+    public EnfordSystemUser() {
+    }
+
+    protected EnfordSystemUser(Parcel in) {
+        this.id = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.username = in.readString();
+        this.password = in.readString();
+        this.email = in.readString();
+        this.name = in.readString();
+        this.orgId = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.roleId = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.type = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.deptId = (Integer) in.readValue(Integer.class.getClassLoader());
+        this.orgName = in.readString();
+        this.deptName = in.readString();
+    }
+
+    public static final Parcelable.Creator<EnfordSystemUser> CREATOR = new Parcelable.Creator<EnfordSystemUser>() {
+        public EnfordSystemUser createFromParcel(Parcel source) {
+            return new EnfordSystemUser(source);
+        }
+
+        public EnfordSystemUser[] newArray(int size) {
+            return new EnfordSystemUser[size];
+        }
+    };
 }

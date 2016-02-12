@@ -19,6 +19,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.enford.market.R;
 import com.enford.market.helper.FastJSONHelper;
 import com.enford.market.helper.HttpHelper;
+import com.enford.market.helper.settinghelper.SettingUtility;
 import com.enford.market.model.EnfordSystemUser;
 import com.enford.market.model.RespBody;
 
@@ -40,6 +41,7 @@ public class LoginActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.login);
 
         mEdtUser = (EditText) findViewById(R.id.login_edt_user);
@@ -49,12 +51,23 @@ public class LoginActivity extends BaseActivity {
         /**
          * 测试语句
          */
-        mEdtUser.setText("test");
-        mEdtPwd.setText("test");
+        //mEdtUser.setText("0323");
+        //mEdtPwd.setText("test");
         //login();
 
-
         initListner();
+
+        autoLogin();
+    }
+
+    /**
+     * 自动登录
+     */
+    private void autoLogin() {
+        EnfordSystemUser user = SettingUtility.getDefaultUser();
+        if (user != null) {
+            login(user.getUsername(), user.getPassword());
+        }
     }
 
     private void initListner() {
@@ -70,11 +83,13 @@ public class LoginActivity extends BaseActivity {
         mBtnDoLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (TextUtils.isEmpty(mEdtUser.getText()) ||
-                        TextUtils.isEmpty(mEdtPwd.getText())) {
+                String user = mEdtUser.getText().toString().trim();
+                String pwd = mEdtPwd.getText().toString().trim();
+                if (TextUtils.isEmpty(user) ||
+                        TextUtils.isEmpty(pwd)) {
                     Toast.makeText(mCtx, R.string.login_error_empty_user_pwd, Toast.LENGTH_SHORT).show();
                 } else {
-                    login();
+                    login(user, pwd);
                 }
             }
         });
@@ -83,29 +98,25 @@ public class LoginActivity extends BaseActivity {
     /**
      * 登录
      */
-    private void login() {
-        String user = mEdtUser.getText().toString().trim();
-        String pwd = mEdtPwd.getText().toString().trim();
+    private void login(final String user, final String pwd) {
         HttpHelper.login(mCtx, user, pwd,
                 new HttpHelper.JsonResponseHandler(mCtx) {
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, String json, Throwable throwable) {
-                        RespBody<EnfordSystemUser> resp = FastJSONHelper.deserializeAny(json, new TypeReference<RespBody<EnfordSystemUser>>() {});
-                        if (resp != null) {
-                            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(mCtx, R.string.login_failed, Toast.LENGTH_SHORT).show();
-                        }
-                    }
 
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String json) {
                         RespBody<EnfordSystemUser> resp = FastJSONHelper.deserializeAny(json, new TypeReference<RespBody<EnfordSystemUser>>() {});
-                        Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
                         if (resp.getCode().equals(SUCCESS)) {
-                            Intent intent = new Intent(mCtx, ResearchListActivity.class);
-                            mCtx.startActivity(intent);
+                            //保存登录用户信息
+                            SettingUtility.setDefaultUser(user, pwd);
+                            EnfordSystemUser enfordUser = resp.getData();
+                            //跳转到主界面
                             finish();
+                            Intent intent = new Intent(mCtx, ResearchListActivity.class);
+                            intent.putExtra("user", enfordUser);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
                         }
                     }
         });

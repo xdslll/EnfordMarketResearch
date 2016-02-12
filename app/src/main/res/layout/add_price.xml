@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="450dp"
+    android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="wrap_content" android:background="@color/bg_color">
     <View
         android:layout_width="match_parent"
@@ -13,11 +13,37 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:textSize="12sp"
+            android:textColor="@drawable/btn_text_color"
+            android:text="@string/cancel"
+            android:layout_marginStart="15dp"
+            android:focusable="true"
+            android:clickable="true"
+            android:id="@+id/add_price_cancel"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:textSize="14sp"
             android:textColor="@color/title_color"
             android:text="商品名称"
             android:id="@+id/add_price_title"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:textSize="12sp"
+            android:textColor="@drawable/btn_text_color"
+            android:text="@string/submit"
+            android:layout_marginEnd="15dp"
+            android:focusable="true"
+            android:clickable="true"
+            android:id="@+id/add_price_submit"
             />
     </RelativeLayout>
     <View
@@ -137,9 +163,9 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="20dp"
             android:textSize="14sp"
-            android:textColor="@drawable/btn_text_selector"
+            android:textColor="@drawable/btn_text_color"
             android:background="@drawable/btn_bg"
-            android:text="@string/add_price_confirm"
+            android:text="@string/submit"
             android:textStyle="bold"
             android:layout_centerInParent="true"
             android:id="@+id/add_price_confirm"

@@ -24,7 +24,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.SurfaceHolder;
 
-import com.jinlin.zxing.example.open.OpenCameraInterface;
+import com.enford.market.qrcode.open.OpenCameraInterface;
 
 import java.io.IOException;
 
@@ -163,7 +163,6 @@ public class CameraManager {
 	
 	/**
 	 * Convenience method for
-	 * {@link org.madmatrix.zxing.android.CaptureActivity}
 	 */
 	public synchronized void setTorch(boolean newSetting) {
 		if (newSetting != configManager.getTorchState(camera)) {

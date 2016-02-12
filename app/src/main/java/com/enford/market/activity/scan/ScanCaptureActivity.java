@@ -20,24 +20,29 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
@@ -97,6 +102,8 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 
 	private Handler mHandler = new MyHandler(this);
 
+	private PopupWindow mPopupAddPrice;
+
 	static class MyHandler extends Handler {
 
 		private WeakReference<Activity> activityReference;
@@ -111,6 +118,7 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 				case PARSE_BARCODE_SUC: // 解析图片成功
 					Toast.makeText(activityReference.get(),
 							"解析成功，结果为：" + msg.obj, Toast.LENGTH_SHORT).show();
+					((ScanCaptureActivity) activityReference.get()).showPopupWindow();
 					break;
 				case PARSE_BARCODE_FAIL:// 解析图片失败
 					Toast.makeText(activityReference.get(), "解析图片失败",
@@ -137,10 +145,12 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		getActionBar().setDisplayHomeAsUpEnabled(true);
+		if (getActionBar() != null) {
+			getActionBar().setDisplayHomeAsUpEnabled(true);
+		}
 		Window window = getWindow();
 		window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-		setContentView(R.layout.activity_capture);
+		setContentView(R.layout.scan_capture);
 
 		scanPreview = (SurfaceView) findViewById(R.id.capture_preview);
 		scanContainer = (RelativeLayout) findViewById(R.id.capture_container);
@@ -150,15 +160,21 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 		inactivityTimer = new InactivityTimer(this);
 		beepManager = new BeepManager(this);
 
-		TranslateAnimation animation = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
-				0.9f);
-		animation.setDuration(4500);
+		TranslateAnimation animation = new TranslateAnimation(
+				Animation.RELATIVE_TO_PARENT, 0.0f,
+				Animation.RELATIVE_TO_PARENT, 0.0f,
+				Animation.RELATIVE_TO_PARENT, 0.0f,
+				Animation.RELATIVE_TO_PARENT, 0.9f);
+		animation.setDuration(3000);
 		animation.setRepeatCount(-1);
 		animation.setRepeatMode(Animation.RESTART);
 		scanLine.startAnimation(animation);
 		
 		findViewById(R.id.capture_flashlight).setOnClickListener(this);
 		findViewById(R.id.capture_scan_photo).setOnClickListener(this);
+
+		initBackButton();
+		initPopupWindow();
 	}
 
 	@Override
@@ -261,7 +277,8 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 		bundle.putInt("height", mCropRect.height());
 		bundle.putString("result", rawResult.getText());
 
-		startActivity(new Intent(ScanCaptureActivity.this, ScanResultActivity.class).putExtras(bundle));
+		//startActivity(new Intent(ScanCaptureActivity.this, ScanResultActivity.class).putExtras(bundle));
+		showPopupWindow();
 	}
 
 	private void initCamera(SurfaceHolder surfaceHolder) {
@@ -381,46 +398,44 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 			switch (requestCode) {
 				case REQUEST_CODE:
 
-					// 获取选中图片的路径
-					Cursor cursor = getContentResolver().query(
-							intent.getData(), null, null, null, null);
-					if (cursor.moveToFirst()) {
-						photoPath = cursor.getString(cursor
-								.getColumnIndex(MediaStore.Images.Media.DATA));
-					}
-					cursor.close();
+					//获取图片路径
+					final Uri imgUri = intent.getData();
+					if (imgUri != null) {
+						progressDialog = new ProgressDialog(this);
+						progressDialog.setMessage("正在扫描...");
+						progressDialog.setCancelable(false);
+						progressDialog.show();
 
-					progressDialog = new ProgressDialog(this);
-					progressDialog.setMessage("正在扫描...");
-					progressDialog.setCancelable(false);
-					progressDialog.show();
+						new Thread(new Runnable() {
 
-					new Thread(new Runnable() {
+							@Override
+							public void run() {
 
-						@Override
-						public void run() {
+								Bitmap img = BitmapUtils
+										.getCompressedBitmap(imgUri.getPath());
 
-							Bitmap img = BitmapUtils
-									.getCompressedBitmap(photoPath);
+								BitmapDecoder decoder = new BitmapDecoder(
+										ScanCaptureActivity.this);
+								Result result = decoder.getRawResult(img);
 
-							BitmapDecoder decoder = new BitmapDecoder(
-									ScanCaptureActivity.this);
-							Result result = decoder.getRawResult(img);
-
-							if (result != null) {
-								Message m = mHandler.obtainMessage();
-								m.what = PARSE_BARCODE_SUC;
-								m.obj = ResultParser.parseResult(result)
-										.toString();
-								mHandler.sendMessage(m);
-							} else {
-								Message m = mHandler.obtainMessage();
-								m.what = PARSE_BARCODE_FAIL;
-								mHandler.sendMessage(m);
+								if (result != null) {
+									Message m = mHandler.obtainMessage();
+									m.what = PARSE_BARCODE_SUC;
+									m.obj = ResultParser.parseResult(result)
+											.toString();
+									mHandler.sendMessage(m);
+								} else {
+									Message m = mHandler.obtainMessage();
+									m.what = PARSE_BARCODE_FAIL;
+									mHandler.sendMessage(m);
+								}
+								progressDialog.dismiss();
 							}
-							progressDialog.dismiss();
-						}
-					}).start();
+						}).start();
+					} else {
+						Toast.makeText(ScanCaptureActivity.this, "获取图片路径失败，请重试！", Toast.LENGTH_SHORT).show();
+					}
+
 					break;
 			}
 		}
@@ -452,5 +467,46 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 		default:
 			break;
 		}
+	}
+
+	private void showPopupWindow() {
+		if (mPopupAddPrice != null && !mPopupAddPrice.isShowing()) {
+			mPopupAddPrice.showAtLocation(scanPreview, Gravity.BOTTOM, 0, 0);
+		} else {
+			dismissPopupWindow();
+		}
+	}
+
+	private void initPopupWindow() {
+		LayoutInflater inflater = LayoutInflater.from(mCtx);
+		View view = inflater.inflate(R.layout.add_price, null);
+		mPopupAddPrice = new PopupWindow(view,
+				ViewGroup.LayoutParams.MATCH_PARENT,
+				ViewGroup.LayoutParams.WRAP_CONTENT, true);
+		mPopupAddPrice.setTouchable(true);
+		ColorDrawable dw = new ColorDrawable(0x00000000);
+		mPopupAddPrice.setBackgroundDrawable(dw);
+		mPopupAddPrice.setOutsideTouchable(true);
+		mPopupAddPrice.setAnimationStyle(R.style.PopupWindowAnimationStyle);
+
+		Button btnConfirm = (Button) view.findViewById(R.id.add_price_confirm);
+		btnConfirm.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				dismissPopupWindow();
+			}
+		});
+	}
+
+	private void dismissPopupWindow() {
+		if (mPopupAddPrice != null && mPopupAddPrice.isShowing()) {
+			mPopupAddPrice.dismiss();
+		}
+	}
+
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+		dismissPopupWindow();
 	}
 }

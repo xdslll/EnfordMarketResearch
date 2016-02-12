@@ -26,14 +26,13 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.jinlin.zxing.example.R;
-import com.jinlin.zxing.example.activity.CaptureActivity;
+import com.enford.market.R;
 
 import java.io.Closeable;
 import java.io.IOException;
 
 /**
- * Manages beeps and vibrations for {@link CaptureActivity}.
+ * Manages beeps and vibrations for {@link com.enford.market.activity.scan.ScanCaptureActivity}.
  */
 public class BeepManager implements MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener, Closeable {
 

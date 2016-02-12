@@ -13,6 +13,7 @@
             android:textColor="@color/title_color"
             android:text="@string/research_list_text"
             android:layout_centerInParent="true"
+            android:id="@+id/title"
             />
         <ImageButton
             android:layout_width="42dp"
@@ -65,7 +66,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp"
-            android:text="2016年2月9日"
+            android:text="@string/loading"
             android:id="@+id/research_list_start_date"
             />
     </RelativeLayout>
@@ -97,7 +98,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp"
-            android:text="2016年2月16日"
+            android:text="@string/loading"
             android:id="@+id/research_list_end_date"
             />
     </RelativeLayout>
@@ -134,7 +135,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp"
-            android:text="江宁欧尚店"
+            android:text="@string/loading"
             android:id="@+id/research_list_comp"
             />
     </RelativeLayout>
@@ -166,7 +167,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp"
-            android:text="江宁鑫泰店"
+            android:text="@string/loading"
             android:id="@+id/research_list_dept"
             />
     </RelativeLayout>
@@ -203,7 +204,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_marginEnd="15dp"
-            android:text="1000种"
+            android:text="@string/loading"
             android:id="@+id/research_list_cod_number"
             />
     </RelativeLayout>
@@ -239,7 +240,7 @@
             android:paddingEnd="10dp"
             android:layout_height="wrap_content"
             android:max="100"
-            android:progress="30"
+            android:progress="0"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
             android:layout_below="@+id/research_list_finish_title"
@@ -254,7 +255,7 @@
             android:layout_marginTop="0dp"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/research_list_finish_seekbar"
-            android:text="已完成30%"
+            android:text="@string/loading"
             android:id="@+id/research_list_finish_text"
             />
     </RelativeLayout>
@@ -268,14 +269,16 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="46dp">
         <Button
-            android:layout_width="331dp"
+            android:layout_width="match_parent"
             android:layout_height="46dp"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="@drawable/btn_text_selector"
-            android:text="@string/research_list_reseach"
+            android:textColor="@drawable/btn_text_color"
+            android:text="@string/loading"
             android:layout_centerInParent="true"
             android:background="@drawable/btn_bg"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
             android:id="@+id/research_list_start"
             />
     </RelativeLayout>

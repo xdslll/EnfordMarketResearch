@@ -13,6 +13,16 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
 
+        <ImageButton
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/scan_back"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:layout_alignParentTop="true"
+            android:id="@+id/back"
+            />
+
         <ImageView
             android:id="@+id/capture_mask_top"
             android:layout_width="match_parent"
