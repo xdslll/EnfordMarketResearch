@@ -13,7 +13,11 @@ public class FastJSONHelper {
      * @return JSON格式的字符串
      */
     public static <T> String serialize(T object) {
-        return JSON.toJSONString(object);
+        try {
+            return JSON.toJSONString(object);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
@@ -23,7 +27,11 @@ public class FastJSONHelper {
      * @return java类型的对象或者java数组类型的对象，不包括java集合类型的对象
      */
     public static <T> T deserialize(String json, Class<T> clz) {
-        return JSON.parseObject(json, clz);
+        try {
+            return JSON.parseObject(json, clz);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
@@ -33,7 +41,11 @@ public class FastJSONHelper {
      * @return List<T>类型的对象
      */
     public static <T> List<T> deserializeList(String json, Class<T> clz) {
-        return JSON.parseArray(json, clz);
+        try {
+            return JSON.parseArray(json, clz);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
     /**
@@ -43,7 +55,11 @@ public class FastJSONHelper {
      * @return 任意Java类型的对象
      */
     public static <T> T deserializeAny(String json, TypeReference<T> type) {
-        return JSON.parseObject(json, type);
+        try {
+            return JSON.parseObject(json, type);
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
 }

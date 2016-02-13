@@ -8,11 +8,11 @@ package com.enford.market.util;
  */
 public interface Consts {
 
-    public static final String HTTP_PROXY_IP = "192.168.0.106";
+    public static final String HTTP_PROXY_IP = "192.168.31.130";
     public static final int HTTP_PROXY_PORT = 8888;
 
     //public static final String API_URL_PREX = "http://192.168.1.2:8080";
-    public static final String API_URL_PREX = "http://192.168.0.106:8080";
+    public static final String API_URL_PREX = "http://192.168.31.130:8080";
     //public static final String API_URL_PREX = "http://192.168.43.175:8080";
     public static final String API_LOGIN = "/api/login/";
     public static final String API_RESEARCH_DEPT = "/api/market/dept/get";
@@ -22,6 +22,7 @@ public interface Consts {
     public static final String API_CATEGORY_COMMODITY = "/api/category/cod/get";
     public static final String API_ADD_PRICE = "/api/price/add";
     public static final String API_UPDATE_PRICE = "/api/price/update";
+    public static final String API_GET_COMMODITY = "/api/cod/get";
 
     public static final String SUCCESS = "0";
     public static final String FAILED = "-1";

@@ -86,8 +86,6 @@ public final class HttpHelper implements Consts {
 
                 }
             }
-
-
         }
 
         return sb.toString();
@@ -245,7 +243,8 @@ public final class HttpHelper implements Consts {
 
         public static RequestParams createAddPriceParam(EnfordProductPrice price) {
             RequestParams params = new RequestParams();
-            params.put("price", price);
+            String priceJson = FastJSONHelper.serialize(price);
+            params.put("json", priceJson);
             return params;
         }
 
@@ -260,7 +259,25 @@ public final class HttpHelper implements Consts {
 
         public static RequestParams createUpdatePriceParam(EnfordProductPrice price) {
             RequestParams params = new RequestParams();
-            params.put("price", price);
+            String priceJson = FastJSONHelper.serialize(price);
+            params.put("json", priceJson);
+            return params;
+        }
+
+        /**
+         * 根据条形码获取商品信息
+         *
+         * @return
+         */
+        public static String createGetCommodityUrl() {
+            return API_URL_PREX + API_GET_COMMODITY;
+        }
+
+        public static RequestParams createGetCommodityParam(int resId, int deptId, String barcode) {
+            RequestParams params = new RequestParams();
+            params.put("resId", resId);
+            params.put("deptId", deptId);
+            params.put("barcode", barcode);
             return params;
         }
 
@@ -398,6 +415,15 @@ public final class HttpHelper implements Consts {
         client.post(ctx,
                 ApiHelper.createUpdatePriceUrl(),
                 ApiHelper.createUpdatePriceParam(price),
+                handler);
+    }
+
+    public static void getCommodityByBarcode(Context ctx, int resId, int deptId, String barcode,
+                                             TextHttpResponseHandler handler) {
+        AsyncHttpClient client = createHttpClient();
+        client.get(ctx,
+                ApiHelper.createGetCommodityUrl(),
+                ApiHelper.createGetCommodityParam(resId, deptId, barcode),
                 handler);
     }
 

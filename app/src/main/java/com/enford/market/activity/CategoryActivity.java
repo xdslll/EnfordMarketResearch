@@ -12,12 +12,14 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.TypeReference;
 import com.enford.market.R;
+import com.enford.market.activity.scan.ScanCaptureActivity;
 import com.enford.market.helper.FastJSONHelper;
 import com.enford.market.helper.HttpHelper;
 import com.enford.market.helper.ImageHelper;
@@ -40,7 +42,7 @@ import cz.msebera.android.httpclient.Header;
 public class CategoryActivity extends BaseUserActivity {
 
     TextView mTxtTitle;
-
+    ImageButton mBtnScan;
     GridView mGridCategory;
     CategoryAdapter mAdapter;
 
@@ -73,18 +75,22 @@ public class CategoryActivity extends BaseUserActivity {
                 FastJSONHelper.deserializeAny(json,
                         new TypeReference<RespBody<List<EnfordProductCategory>>>() {
                         });
-        if (resp.getCode().equals(SUCCESS)) {
-            //获取分类数据
-            mCategoryList = resp.getData();
-            //获取分类数量
-            int count = resp.getTotalnum();
-            mTxtTitle.append("(" + count + ")");
-            //填充GridView数据
-            mAdapter = new CategoryAdapter(mCtx, mCategoryList);
-            mGridCategory.setAdapter(mAdapter);
+        if (resp != null) {
+            if (resp.getCode().equals(SUCCESS)) {
+                //获取分类数据
+                mCategoryList = resp.getData();
+                //获取分类数量
+                int count = resp.getTotalnum();
+                mTxtTitle.append("(" + count + ")");
+                //填充GridView数据
+                mAdapter = new CategoryAdapter(mCtx, mCategoryList);
+                mGridCategory.setAdapter(mAdapter);
+            } else {
+                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+                LogUtil.d(resp.getMsg());
+            }
         } else {
-            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
-            LogUtil.d(resp.getMsg());
+            Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -97,7 +103,15 @@ public class CategoryActivity extends BaseUserActivity {
 
         mGridCategory = (GridView) findViewById(R.id.category_list_grid);
         mTxtTitle = (TextView) findViewById(R.id.title);
+        mBtnScan = (ImageButton) findViewById(R.id.research_detail_scan);
 
+        initBackButton();
+        initListener();
+
+        getRootCategory();
+    }
+
+    private void initListener() {
         mGridCategory.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -109,9 +123,15 @@ public class CategoryActivity extends BaseUserActivity {
             }
         });
 
-        initBackButton();
-
-        getRootCategory();
+        mBtnScan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mCtx, ScanCaptureActivity.class);
+                intent.putExtra("user", mUser);
+                intent.putExtra("research", mResearch);
+                startActivity(intent);
+            }
+        });
     }
 
     /**

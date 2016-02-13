@@ -22,32 +22,33 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
-import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.TypeReference;
 import com.enford.market.R;
-import com.enford.market.activity.BaseActivity;
+import com.enford.market.activity.BaseUserActivity;
+import com.enford.market.activity.PricePopupWindowHandler;
+import com.enford.market.helper.FastJSONHelper;
+import com.enford.market.helper.HttpHelper;
+import com.enford.market.model.EnfordApiMarketResearch;
+import com.enford.market.model.EnfordProductCommodity;
+import com.enford.market.model.RespBody;
 import com.enford.market.qrcode.camera.CameraManager;
 import com.enford.market.qrcode.decode.BitmapDecoder;
 import com.enford.market.qrcode.decode.DecodeThread;
@@ -55,12 +56,16 @@ import com.enford.market.qrcode.utils.BeepManager;
 import com.enford.market.qrcode.utils.BitmapUtils;
 import com.enford.market.qrcode.utils.CaptureActivityHandler;
 import com.enford.market.qrcode.utils.InactivityTimer;
+import com.enford.market.util.Consts;
+import com.enford.market.util.LogUtil;
 import com.google.zxing.Result;
 import com.google.zxing.client.result.ResultParser;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * This activity opens the camera and does the actual scanning on a background
@@ -71,15 +76,17 @@ import java.lang.reflect.Field;
  * @author dswitkin@google.com (Daniel Switkin)
  * @author Sean Owen
  */
-public final class ScanCaptureActivity extends BaseActivity implements SurfaceHolder.Callback,OnClickListener {
+public final class ScanCaptureActivity extends BaseUserActivity
+		implements SurfaceHolder.Callback, OnClickListener, Consts {
 
 	private static final String TAG = ScanCaptureActivity.class.getSimpleName();
 	
 	private static final int REQUEST_CODE = 100;
-
 	private static final int PARSE_BARCODE_FAIL = 300;
-	
 	private static final int PARSE_BARCODE_SUC = 200;
+	public static final int SCAN_COMMODITY_SUCCESS = 400;
+	public static final int REQUEST_ADD_PRICE = 500;
+	public static final int REQUEST_UPDATE_PRICE = 600;
 
 	private CameraManager cameraManager;
 	private CaptureActivityHandler handler;
@@ -95,14 +102,16 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 	
 	private boolean isFlashlightOpen;
 
+	private EnfordApiMarketResearch mResearch;
+	private EnfordProductCommodity mCommodity;
+	private PricePopupWindowHandler mPricePopupHandler;
+
 	/**
 	 * 图片的路径
 	 */
 	private String photoPath;
 
 	private Handler mHandler = new MyHandler(this);
-
-	private PopupWindow mPopupAddPrice;
 
 	static class MyHandler extends Handler {
 
@@ -114,26 +123,90 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 
 		@Override
 		public void handleMessage(Message msg) {
+			final ScanCaptureActivity activity = ((ScanCaptureActivity) activityReference.get());
 			switch (msg.what) {
 				case PARSE_BARCODE_SUC: // 解析图片成功
-					Toast.makeText(activityReference.get(),
-							"解析成功，结果为：" + msg.obj, Toast.LENGTH_SHORT).show();
-					((ScanCaptureActivity) activityReference.get()).showPopupWindow();
+					/*Toast.makeText(activityReference.get(),
+							"解析成功，结果为：" + msg.obj, Toast.LENGTH_SHORT).show();*/
+					String barcode = (String) msg.obj;
+					activity.requestGetCommodity(barcode, activity);
 					break;
 				case PARSE_BARCODE_FAIL:// 解析图片失败
 					Toast.makeText(activityReference.get(), "解析图片失败",
 							Toast.LENGTH_SHORT).show();
 					break;
-
+				case SCAN_COMMODITY_SUCCESS:
+					activity.handleGetCommodity(msg);
+					break;
+				case REQUEST_ADD_PRICE:
+					activity.handlePriceResponse(msg);
+					break;
+				case REQUEST_UPDATE_PRICE:
+					activity.handlePriceResponse(msg);
+					break;
 				default:
 					break;
 			}
 			super.handleMessage(msg);
 		}
 	}
-	
+
 	public Handler getHandler() {
 		return handler;
+	}
+
+	private void requestGetCommodity(String barcode, final ScanCaptureActivity activity) {
+		int resId = activity.mResearch.getResearch().getId();
+		int deptId = activity.mResearch.getDept().getId();
+		HttpHelper.getCommodityByBarcode(activity.mCtx,
+				resId, deptId, barcode,
+				new HttpHelper.JsonResponseHandler(activity.mCtx) {
+					@Override
+					public void onSuccess(int statusCode, Header[] headers, String responseString) {
+						Message msg = Message.obtain(activity.mHandler, ScanCaptureActivity.SCAN_COMMODITY_SUCCESS, responseString);
+						msg.sendToTarget();
+					}
+				});
+	}
+
+	private void handlePriceResponse(Message msg) {
+		String json = (String) msg.obj;
+		RespBody resp = FastJSONHelper.deserializeAny(
+				json, new TypeReference<RespBody>() {});
+		if (resp != null) {
+			if (resp.getCode().equals(SUCCESS)) {
+				Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+				//mPricePopupHandler.dismissPopupWindow();
+			} else {
+				Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+				LogUtil.d(resp.getMsg());
+			}
+		} else {
+			Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	private void handleGetCommodity(Message msg) {
+		String json = (String) msg.obj;
+		RespBody<EnfordProductCommodity> resp =
+				FastJSONHelper.deserializeAny(json,
+						new TypeReference<RespBody<EnfordProductCommodity>>() {});
+		if (resp != null) {
+			if (resp.getCode().equals(SUCCESS)) {
+				mCommodity = resp.getData();
+				mPricePopupHandler.initCommodityPopupWindow();
+				mPricePopupHandler.setResearchData(mResearch);
+				mPricePopupHandler.setCommodityData(mCommodity);
+				mPricePopupHandler.setUser(mUser);
+				mPricePopupHandler.showPopupWindow(scanPreview);
+				mPricePopupHandler.showCommodityPopupWindow(scanContainer);
+			} else {
+				Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+				LogUtil.d(resp.getMsg());
+			}
+		} else {
+			Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+		}
 	}
 
 	public CameraManager getCameraManager() {
@@ -145,6 +218,9 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 	@Override
 	public void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
+
+		mResearch = getIntent().getParcelableExtra("research");
+
 		if (getActionBar() != null) {
 			getActionBar().setDisplayHomeAsUpEnabled(true);
 		}
@@ -174,7 +250,8 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 		findViewById(R.id.capture_scan_photo).setOnClickListener(this);
 
 		initBackButton();
-		initPopupWindow();
+
+		mPricePopupHandler = new PricePopupWindowHandler(mCtx, mHandler);
 	}
 
 	@Override
@@ -278,7 +355,8 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 		bundle.putString("result", rawResult.getText());
 
 		//startActivity(new Intent(ScanCaptureActivity.this, ScanResultActivity.class).putExtras(bundle));
-		showPopupWindow();
+		//mPricePopupHandler.showPopupWindow(scanPreview);
+		requestGetCommodity(rawResult.getText(), this);
 	}
 
 	private void initCamera(SurfaceHolder surfaceHolder) {
@@ -469,44 +547,9 @@ public final class ScanCaptureActivity extends BaseActivity implements SurfaceHo
 		}
 	}
 
-	private void showPopupWindow() {
-		if (mPopupAddPrice != null && !mPopupAddPrice.isShowing()) {
-			mPopupAddPrice.showAtLocation(scanPreview, Gravity.BOTTOM, 0, 0);
-		} else {
-			dismissPopupWindow();
-		}
-	}
-
-	private void initPopupWindow() {
-		LayoutInflater inflater = LayoutInflater.from(mCtx);
-		View view = inflater.inflate(R.layout.add_price, null);
-		mPopupAddPrice = new PopupWindow(view,
-				ViewGroup.LayoutParams.MATCH_PARENT,
-				ViewGroup.LayoutParams.WRAP_CONTENT, true);
-		mPopupAddPrice.setTouchable(true);
-		ColorDrawable dw = new ColorDrawable(0x00000000);
-		mPopupAddPrice.setBackgroundDrawable(dw);
-		mPopupAddPrice.setOutsideTouchable(true);
-		mPopupAddPrice.setAnimationStyle(R.style.PopupWindowAnimationStyle);
-
-		Button btnConfirm = (Button) view.findViewById(R.id.add_price_confirm);
-		btnConfirm.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				dismissPopupWindow();
-			}
-		});
-	}
-
-	private void dismissPopupWindow() {
-		if (mPopupAddPrice != null && mPopupAddPrice.isShowing()) {
-			mPopupAddPrice.dismiss();
-		}
-	}
-
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		dismissPopupWindow();
+		mPricePopupHandler.dismissPopupWindow();
 	}
 }

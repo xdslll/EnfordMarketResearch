@@ -19,4 +19,8 @@
         <item name="android:windowExitAnimation">@anim/tran_out</item>
     </style>
 
+    <style name="PopupWindowAnimationStyle2">
+        <item name="android:windowEnterAnimation">@anim/tran_in2</item>
+        <item name="android:windowExitAnimation">@anim/tran_out2</item>
+    </style>
 </resources>

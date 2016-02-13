@@ -23,6 +23,7 @@ import com.enford.market.helper.HttpHelper;
 import com.enford.market.model.EnfordApiMarketResearch;
 import com.enford.market.model.EnfordProductCategory;
 import com.enford.market.model.EnfordProductCommodity;
+import com.enford.market.model.EnfordProductPrice;
 import com.enford.market.model.RespBody;
 import com.enford.market.util.LogUtil;
 
@@ -48,8 +49,7 @@ public class ResearchDetailActivity extends BaseUserActivity {
     private ImageButton mBtnScan;
     private TextView mTxtTitle;
 
-    //private PopupWindow mPopupAddPrice;
-    private PricePopupWindow mPricePopup;
+    private PricePopupWindowHandler mPricePopupHandler;
 
     EnfordApiMarketResearch mResearch;
     EnfordProductCategory mRootCategory;
@@ -74,54 +74,68 @@ public class ResearchDetailActivity extends BaseUserActivity {
                     activity.handleGetCategory(msg);
                     break;
                 case REQUEST_ADD_PRICE:
-
+                    activity.handlePriceResponse(msg);
                     break;
                 case REQUEST_UPDATE_PRICE:
-                    activity.handleUpdatePrice(msg);
+                    activity.handlePriceResponse(msg);
                     break;
             }
         }
     }
 
-    private void handleUpdatePrice(Message msg) {
+    private void handlePriceResponse(Message msg) {
         String json = (String) msg.obj;
         RespBody resp = FastJSONHelper.deserializeAny(
                 json, new TypeReference<RespBody>() {});
-        if (resp.getCode().equals(SUCCESS)) {
-            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
-            mPricePopup.dismissPopupWindow();
+        if (resp != null) {
+            if (resp.getCode().equals(SUCCESS)) {
+                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+                mPricePopupHandler.dismissPopupWindow();
+                Bundle param = msg.getData();
+                int position = param.getInt("position");
+                EnfordProductPrice price = param.getParcelable("price");
+                mAdapter.updateData(position, price);
+                mAdapter.notifyDataSetChanged();
+            } else {
+                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+                LogUtil.d(resp.getMsg());
+            }
         } else {
-            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
-            LogUtil.d(resp.getMsg());
+            Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
         }
     }
 
     private void handleGetCategory(Message msg) {
         String json = (String) msg.obj;
-        RespBody<List<EnfordProductCategory>> resp =
+        RespBody<EnfordProductCategory> resp =
                 FastJSONHelper.deserializeAny(json,
-                        new TypeReference<RespBody<List<EnfordProductCategory>>>() {});
-        if (resp.getCode().equals(SUCCESS)) {
-            //获取分类数据
-            mCategoryList = resp.getData();
-            //填充ExpandableListView数据
-            mAdapter = new ResearchDetailAdapter(mCtx, mCategoryList);
-            mAdapter.setAddPriceListener(new ResearchDetailAdapter.OnAddPriceListener() {
+                        new TypeReference<RespBody<EnfordProductCategory>>() {});
+        if (resp != null) {
+            if (resp.getCode().equals(SUCCESS)) {
+                //获取分类数据
+                mCategoryList = resp.getDatas();
+                //填充ExpandableListView数据
+                mAdapter = new ResearchDetailAdapter(mCtx, mCategoryList);
+                mAdapter.setAddPriceListener(new ResearchDetailAdapter.OnAddPriceListener() {
 
-                @Override
-                public void onAddPriceListener(int position, EnfordProductCommodity cod, int tag) {
-                    mPricePopup.setData(cod);
-                    mPricePopup.setTag(tag);
-                    mPricePopup.setUser(mUser);
-                    mPricePopup.showPopupWindow(mListResearchDetail);
-                }
-            });
+                    @Override
+                    public void onAddPriceListener(int position, EnfordProductCommodity cod) {
+                        mPricePopupHandler.setPosition(position);
+                        mPricePopupHandler.setResearchData(mResearch);
+                        mPricePopupHandler.setCommodityData(cod);
+                        mPricePopupHandler.setUser(mUser);
+                        mPricePopupHandler.showPopupWindow(mListResearchDetail);
+                    }
+                });
 
-            mListResearchDetail.setAdapter(mAdapter);
+                mListResearchDetail.setAdapter(mAdapter);
 
+            } else {
+                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+                LogUtil.d(resp.getMsg());
+            }
         } else {
-            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
-            LogUtil.d(resp.getMsg());
+            Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -153,7 +167,7 @@ public class ResearchDetailActivity extends BaseUserActivity {
         mListResearchDetail = (ExpandableStickyListHeadersListView) findViewById(R.id.research_detail_list);
         mBtnScan = (ImageButton) findViewById(R.id.research_detail_scan);
 
-        mPricePopup = new PricePopupWindow(mCtx, mHandler);
+        mPricePopupHandler = new PricePopupWindowHandler(mCtx, mHandler);
 
         initBackButton();
         initListener();
@@ -183,7 +197,10 @@ public class ResearchDetailActivity extends BaseUserActivity {
         mBtnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(mCtx, ScanCaptureActivity.class));
+                Intent intent = new Intent(mCtx, ScanCaptureActivity.class);
+                intent.putExtra("user", mUser);
+                intent.putExtra("research", mResearch);
+                startActivity(intent);
             }
         });
 
@@ -195,7 +212,19 @@ public class ResearchDetailActivity extends BaseUserActivity {
                                 new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-                                        //Toast.makeText(ResearchDetailActivity.this, "点击了: " + which, Toast.LENGTH_SHORT).show();
+                                        switch (which) {
+                                            case 0:
+                                                mAdapter.showAll();
+                                                break;
+                                            case 1:
+                                                mAdapter.showIncomplete();
+                                                break;
+                                            case 2:
+                                                mAdapter.showComplete();
+                                                break;
+                                        }
+                                        mTxtTitle.setText(mRootCategory.getName());
+                                        mTxtTitle.append(String.format(getString(R.string.count), mAdapter.getCount()));
                                     }
                                 })
                         .show();
@@ -261,44 +290,9 @@ public class ResearchDetailActivity extends BaseUserActivity {
         }
     }
 
-    /*private void showPopupWindow() {
-        if (mPopupAddPrice != null && !mPopupAddPrice.isShowing()) {
-            mPopupAddPrice.showAtLocation(mListResearchDetail, Gravity.BOTTOM, 0, 0);
-        } else {
-            dismissPopupWindow();
-        }
-    }
-
-    private void initPopupWindow() {
-        LayoutInflater inflater = LayoutInflater.from(mCtx);
-        View view = inflater.inflate(R.layout.add_price, null);
-        mPopupAddPrice = new PopupWindow(view,
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT, true);
-        mPopupAddPrice.setTouchable(true);
-        ColorDrawable dw = new ColorDrawable(0x00000000);
-        mPopupAddPrice.setBackgroundDrawable(dw);
-        mPopupAddPrice.setOutsideTouchable(true);
-        mPopupAddPrice.setAnimationStyle(R.style.PopupWindowAnimationStyle);
-
-        Button btnConfirm = (Button) view.findViewById(R.id.add_price_confirm);
-        btnConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dismissPopupWindow();
-            }
-        });
-    }
-
-    private void dismissPopupWindow() {
-        if (mPopupAddPrice != null && mPopupAddPrice.isShowing()) {
-            mPopupAddPrice.dismiss();
-        }
-    }*/
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        mPricePopup.dismissPopupWindow();
+        mPricePopupHandler.dismissPopupWindow();
     }
 }

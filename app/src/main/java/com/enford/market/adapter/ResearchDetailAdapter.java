@@ -32,8 +32,69 @@ public class ResearchDetailAdapter extends BaseAdapter implements
     private List<EnfordProductCategory> mCategoryList;
     private List<EnfordProductCommodity> mCommodityList;
 
+    public void updateData(int position, EnfordProductPrice price) {
+        mCommodityList.get(position).setPrice(price);
+    }
+
+    public void showAll() {
+        parseAll();
+        notifyDataSetChanged();
+    }
+
+    public void showIncomplete() {
+        parseComplete(false);
+        notifyDataSetChanged();
+    }
+
+    public void showComplete() {
+        parseComplete(true);
+        notifyDataSetChanged();
+    }
+
+    public void parseAll() {
+        mCommodityList.clear();
+
+        for (int i = 0; i < mCategoryList.size(); i++) {
+            int count = 0;
+            EnfordProductCategory category = mCategoryList.get(i);
+            List<EnfordProductCommodity> commodityList = category.getCommodityList();
+            for (int j = 0; j < commodityList.size(); j++) {
+                EnfordProductCommodity commodity = commodityList.get(j);
+                commodity.setCategoryCode(category.getCode());
+                commodity.setCategoryName(category.getName());
+                mCommodityList.add(commodity);
+                count++;
+            }
+            category.setCodCount(count);
+        }
+    }
+
+    public void parseComplete(boolean complete) {
+        mCommodityList.clear();
+        for (int i = 0; i < mCategoryList.size(); i++) {
+            int count = 0;
+            EnfordProductCategory category = mCategoryList.get(i);
+            List<EnfordProductCommodity> commodityList = category.getCommodityList();
+            for (int j = 0; j < commodityList.size(); j++) {
+                EnfordProductCommodity commodity = commodityList.get(j);
+                if (complete) {
+                    if (commodity.getPrice() != null) {
+                        mCommodityList.add(commodity);
+                        count++;
+                    }
+                } else {
+                    if (commodity.getPrice() == null) {
+                        mCommodityList.add(commodity);
+                        count++;
+                    }
+                }
+            }
+            category.setCodCount(count);
+        }
+    }
+
     public interface OnAddPriceListener {
-        void onAddPriceListener(int position, EnfordProductCommodity cod, int tag);
+        void onAddPriceListener(int position, EnfordProductCommodity cod);
     }
 
     public void setAddPriceListener(OnAddPriceListener addPriceListener) {
@@ -45,16 +106,7 @@ public class ResearchDetailAdapter extends BaseAdapter implements
         mInflater = LayoutInflater.from(context);
         mCategoryList = categoryList;
         mCommodityList = new ArrayList<EnfordProductCommodity>();
-        for (int i = 0; i < mCategoryList.size(); i++) {
-            EnfordProductCategory category = mCategoryList.get(i);
-            List<EnfordProductCommodity> commodityList = category.getCommodityList();
-            for (int j = 0; j < commodityList.size(); j++) {
-                EnfordProductCommodity commodity = commodityList.get(j);
-                commodity.setCategoryCode(category.getCode());
-                commodity.setCategoryName(category.getName());
-                mCommodityList.add(commodity);
-            }
-        }
+        parseAll();
     }
 
     @Override
@@ -141,7 +193,7 @@ public class ResearchDetailAdapter extends BaseAdapter implements
             @Override
             public void onClick(View v) {
                 if (mAddPriceListener != null) {
-                    mAddPriceListener.onAddPriceListener(position, getItem(position), PRICE_UPDATE_TAG);
+                    mAddPriceListener.onAddPriceListener(position, getItem(position));
                 }
             }
         });
@@ -149,7 +201,7 @@ public class ResearchDetailAdapter extends BaseAdapter implements
             @Override
             public void onClick(View v) {
                 if (mAddPriceListener != null) {
-                    mAddPriceListener.onAddPriceListener(position, getItem(position), PRICE_ADD_TAG);
+                    mAddPriceListener.onAddPriceListener(position, getItem(position));
                 }
             }
         });

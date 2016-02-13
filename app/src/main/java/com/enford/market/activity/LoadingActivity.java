@@ -62,8 +62,11 @@ public class LoadingActivity extends BaseActivity {
 
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String json) {
-                        RespBody<EnfordSystemUser> resp = FastJSONHelper.deserializeAny(json, new TypeReference<RespBody<EnfordSystemUser>>() {
-                        });
+                        RespBody<EnfordSystemUser> resp = FastJSONHelper.deserializeAny(json, new TypeReference<RespBody<EnfordSystemUser>>() {});
+                        if (resp == null) {
+                            gotoLogin();
+                            return;
+                        }
                         if (resp.getCode().equals(SUCCESS)) {
                             //保存登录用户信息
                             SettingUtility.setDefaultUser(user, pwd);

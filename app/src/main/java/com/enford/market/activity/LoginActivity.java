@@ -93,18 +93,22 @@ public class LoginActivity extends BaseActivity {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String json) {
                         RespBody<EnfordSystemUser> resp = FastJSONHelper.deserializeAny(json, new TypeReference<RespBody<EnfordSystemUser>>() {});
-                        if (resp.getCode().equals(SUCCESS)) {
-                            //保存登录用户信息
-                            SettingUtility.setDefaultUser(user, pwd);
-                            EnfordSystemUser enfordUser = resp.getData();
-                            //跳转到主界面
-                            finish();
-                            Intent intent = new Intent(mCtx, ResearchListActivity.class);
-                            intent.putExtra("user", enfordUser);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            startActivity(intent);
+                        if (resp != null) {
+                            if (resp.getCode().equals(SUCCESS)) {
+                                //保存登录用户信息
+                                SettingUtility.setDefaultUser(user, pwd);
+                                EnfordSystemUser enfordUser = resp.getData();
+                                //跳转到主界面
+                                finish();
+                                Intent intent = new Intent(mCtx, ResearchListActivity.class);
+                                intent.putExtra("user", enfordUser);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+                            }
                         } else {
-                            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                     }
         });
