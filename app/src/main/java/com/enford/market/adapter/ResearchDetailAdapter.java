@@ -6,74 +6,65 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.SectionIndexer;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.enford.market.R;
+import com.enford.market.model.EnfordProductCategory;
+import com.enford.market.model.EnfordProductCommodity;
+import com.enford.market.model.EnfordProductPrice;
+import com.enford.market.util.Consts;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import se.emilsjolander.stickylistheaders.StickyListHeadersAdapter;
 
 public class ResearchDetailAdapter extends BaseAdapter implements
-        StickyListHeadersAdapter, SectionIndexer {
+        StickyListHeadersAdapter, Consts {
 
-    private final Context mContext;
-    private String[] mCountries;
-    private int[] mSectionIndices;
-    private Character[] mSectionLetters;
+    private final Context mCtx;
+    //private String[] mCountries;
+    //private int[] mSectionIndices;
+    //private Character[] mSectionLetters;
     private LayoutInflater mInflater;
     private OnAddPriceListener mAddPriceListener;
+    private List<EnfordProductCategory> mCategoryList;
+    private List<EnfordProductCommodity> mCommodityList;
 
     public interface OnAddPriceListener {
-        void onAddPriceListener();
+        void onAddPriceListener(int position, EnfordProductCommodity cod, int tag);
     }
 
     public void setAddPriceListener(OnAddPriceListener addPriceListener) {
         this.mAddPriceListener = addPriceListener;
     }
 
-    public ResearchDetailAdapter(Context context) {
-        mContext = context;
+    public ResearchDetailAdapter(Context context, List<EnfordProductCategory> categoryList) {
+        mCtx = context;
         mInflater = LayoutInflater.from(context);
-        mCountries = context.getResources().getStringArray(R.array.countries);
-        mSectionIndices = getSectionIndices();
-        mSectionLetters = getSectionLetters();
-    }
-
-    private int[] getSectionIndices() {
-        ArrayList<Integer> sectionIndices = new ArrayList<Integer>();
-        char lastFirstChar = mCountries[0].charAt(0);
-        sectionIndices.add(0);
-        for (int i = 1; i < mCountries.length; i++) {
-            if (mCountries[i].charAt(0) != lastFirstChar) {
-                lastFirstChar = mCountries[i].charAt(0);
-                sectionIndices.add(i);
+        mCategoryList = categoryList;
+        mCommodityList = new ArrayList<EnfordProductCommodity>();
+        for (int i = 0; i < mCategoryList.size(); i++) {
+            EnfordProductCategory category = mCategoryList.get(i);
+            List<EnfordProductCommodity> commodityList = category.getCommodityList();
+            for (int j = 0; j < commodityList.size(); j++) {
+                EnfordProductCommodity commodity = commodityList.get(j);
+                commodity.setCategoryCode(category.getCode());
+                commodity.setCategoryName(category.getName());
+                mCommodityList.add(commodity);
             }
         }
-        int[] sections = new int[sectionIndices.size()];
-        for (int i = 0; i < sectionIndices.size(); i++) {
-            sections[i] = sectionIndices.get(i);
-        }
-        return sections;
-    }
-
-    private Character[] getSectionLetters() {
-        Character[] letters = new Character[mSectionIndices.length];
-        for (int i = 0; i < mSectionIndices.length; i++) {
-            letters[i] = mCountries[mSectionIndices[i]].charAt(0);
-        }
-        return letters;
     }
 
     @Override
     public int getCount() {
-        return mCountries.length;
+        return mCommodityList.size();
     }
 
     @Override
-    public Object getItem(int position) {
-        return mCountries[position];
+    public EnfordProductCommodity getItem(int position) {
+        return mCommodityList.get(position);
     }
 
     @Override
@@ -82,7 +73,7 @@ public class ResearchDetailAdapter extends BaseAdapter implements
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
 
         if (convertView == null) {
@@ -95,23 +86,70 @@ public class ResearchDetailAdapter extends BaseAdapter implements
             holder.proPrice = (TextView) convertView.findViewById(R.id.research_detail_list_item_prompt_price);
             holder.addPrice = (Button) convertView.findViewById(R.id.research_detail_list_item_add_price);
             holder.editPrice = (Button) convertView.findViewById(R.id.research_detail_list_item_edit_price);
+            holder.addPriceLayout = (LinearLayout) convertView.findViewById(R.id.research_detail_list_item_add_price_layout);
+            holder.editPriceLayout = (LinearLayout) convertView.findViewById(R.id.research_detail_list_item_edit_price_layout);
+            holder.missTag = (TextView) convertView.findViewById(R.id.research_detail_list_item_miss_tag);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        //holder.text.setText(mCountries[position]);
-        holder.name.setText("长城干红酒（张裕解百纳）");
-        holder.size.setText("规格：720g");
-        holder.barcode.setText("条形码：6908791100609");
-        holder.orgPrice.setText("原价：￥21.90");
-        holder.proPrice.setText("促销价：￥21.90");
-
+        EnfordProductCommodity commodity = getItem(position);
+        EnfordProductPrice price = commodity.getPrice();
+        holder.name.setText(commodity.getpName());
+        holder.size.setText(String.format(
+                mCtx.getString(R.string.size),
+                commodity.getpSize(),
+                commodity.getUnit()));
+        holder.barcode.setText(String.format(
+                mCtx.getString(R.string.barcode),
+                commodity.getBarCode()));
+        if (price != null) {
+            if (price.getRetailPrice() == null
+                    || price.getRetailPrice() == 0) {
+                holder.orgPrice.setVisibility(View.GONE);
+            } else {
+                holder.orgPrice.setVisibility(View.VISIBLE);
+                holder.orgPrice.setText(String.format(
+                        mCtx.getString(R.string.origin_price),
+                        String.valueOf(price.getRetailPrice() == null ?
+                                "0.0" : price.getRetailPrice())));
+            }
+            if (price.getPromptPrice() == null
+                    || price.getPromptPrice() == 0) {
+                holder.proPrice.setVisibility(View.GONE);
+            } else {
+                holder.proPrice.setVisibility(View.VISIBLE);
+                holder.proPrice.setText(String.format(
+                        mCtx.getString(R.string.prompt_price),
+                        String.valueOf(price.getPromptPrice() == null ?
+                                "0.0" : price.getPromptPrice())));
+            }
+            if (price.getMiss() == MISS_TAG_MISS) {
+                holder.missTag.setVisibility(View.VISIBLE);
+                holder.missTag.setText(R.string.add_price_miss_text);
+            } else {
+                holder.missTag.setVisibility(View.GONE);
+            }
+            holder.editPriceLayout.setVisibility(View.VISIBLE);
+            holder.addPriceLayout.setVisibility(View.GONE);
+        } else {
+            holder.editPriceLayout.setVisibility(View.GONE);
+            holder.addPriceLayout.setVisibility(View.VISIBLE);
+        }
         holder.editPrice.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (mAddPriceListener != null) {
-                    mAddPriceListener.onAddPriceListener();
+                    mAddPriceListener.onAddPriceListener(position, getItem(position), PRICE_UPDATE_TAG);
+                }
+            }
+        });
+        holder.addPrice.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mAddPriceListener != null) {
+                    mAddPriceListener.onAddPriceListener(position, getItem(position), PRICE_ADD_TAG);
                 }
             }
         });
@@ -133,8 +171,17 @@ public class ResearchDetailAdapter extends BaseAdapter implements
         }
 
         // set research_detail_list_header text as first char in name
-        CharSequence headerChar = mCountries[position].subSequence(0, 1);
-        holder.text.setText("简装白酒(10)");
+        //CharSequence headerChar = mCountries[position].subSequence(0, 1);
+        holder.text.setText(getItem(position).getCategoryName());
+        int code = getItem(position).getCategoryCode();
+        for (int i = 0; i < mCategoryList.size(); i++) {
+            if (mCategoryList.get(i).getCode() == code) {
+                holder.text.append(String.format(
+                        mCtx.getString(R.string.count),
+                        mCategoryList.get(i).getCodCount()));
+                break;
+            }
+        }
 
         return convertView;
     }
@@ -145,52 +192,20 @@ public class ResearchDetailAdapter extends BaseAdapter implements
      */
     @Override
     public long getHeaderId(int position) {
-        // return the first character of the country as ID because this is what
-        // headers are based upon
-        //return position;
-        return mCountries[position].subSequence(0, 1).charAt(0);
-    }
-
-    @Override
-    public int getPositionForSection(int section) {
-        if (mSectionIndices.length == 0) {
-            return 0;
-        }
-        
-        if (section >= mSectionIndices.length) {
-            section = mSectionIndices.length - 1;
-        } else if (section < 0) {
-            section = 0;
-        }
-        return mSectionIndices[section];
-    }
-
-    @Override
-    public int getSectionForPosition(int position) {
-        for (int i = 0; i < mSectionIndices.length; i++) {
-            if (position < mSectionIndices[i]) {
-                return i - 1;
-            }
-        }
-        return mSectionIndices.length - 1;
-    }
-
-    @Override
-    public Object[] getSections() {
-        return mSectionLetters;
+        return getItem(position).getCategoryCode();
     }
 
     public void clear() {
-        mCountries = new String[0];
+        /*mCountries = new String[0];
         mSectionIndices = new int[0];
-        mSectionLetters = new Character[0];
+        mSectionLetters = new Character[0];*/
         notifyDataSetChanged();
     }
 
     public void restore() {
-        mCountries = mContext.getResources().getStringArray(R.array.countries);
+        /*mCountries = mCtx.getResources().getStringArray(R.array.countries);
         mSectionIndices = getSectionIndices();
-        mSectionLetters = getSectionLetters();
+        mSectionLetters = getSectionLetters();*/
         notifyDataSetChanged();
     }
 
@@ -199,8 +214,9 @@ public class ResearchDetailAdapter extends BaseAdapter implements
     }
 
     class ViewHolder {
-        TextView name, size, barcode, orgPrice, proPrice;
+        TextView name, size, barcode, orgPrice, proPrice, missTag;
         Button addPrice, editPrice;
+        LinearLayout addPriceLayout, editPriceLayout;
     }
 
 }

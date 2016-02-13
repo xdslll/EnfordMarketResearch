@@ -8,9 +8,9 @@
         <item name="android:maxHeight">6.0dip</item>
         <item name="android:indeterminateOnly">false</item>
         <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal</item>
-        <item name="android:progressDrawable">@drawable/seekbar_process_drawable</item>
+        <item name="android:progressDrawable">@drawable/seekbar_process_drawable_green</item>
         <item name="android:minHeight">6.0dip</item>
-        <item name="android:thumb">@drawable/thumb_bar</item>
+        <item name="android:thumb">@drawable/thumb_bar_green</item>
 
     </style>
 

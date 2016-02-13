@@ -20,11 +20,10 @@
             android:textSize="16sp"
             android:textStyle="bold"
             android:textColor="@color/title_color"
-            android:text="酒(182)"
             android:layout_centerInParent="true"
             android:drawableEnd="@drawable/dropdown"
 
-            android:id="@+id/research_detail_title"
+            android:id="@+id/title"
             />
         <ImageButton
             android:layout_width="42dp"

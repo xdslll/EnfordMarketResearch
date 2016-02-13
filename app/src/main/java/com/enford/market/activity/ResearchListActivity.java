@@ -110,6 +110,8 @@ public class ResearchListActivity extends BaseUserActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(mCtx, CategoryActivity.class);
+                intent.putExtra("user", mUser);
+                intent.putExtra("research", mResearchDeptList.get(mTabPosition));
                 startActivity(intent);
             }
         });
@@ -237,15 +239,19 @@ public class ResearchListActivity extends BaseUserActivity {
                     case RESEARCH_STATE_HAVE_PUBLISHED:
                         color = getResources().getColor(R.color.orange);
                         mBtnStartResearch.setBackground(getResources().getDrawable(R.drawable.btn_bg_orange));
-                        mBtnStartResearch.setTextColor(getResources().getColor(R.drawable.btn_text_color_orange));
+                        mBtnStartResearch.setTextColor(getResources().getColorStateList(R.drawable.btn_text_color_orange));
                         mBtnStartResearch.setText(getResources().getString(R.string.research_not_started));
                         mBtnStartResearch.setEnabled(false);
+                        mSkbFinishPercent.setProgressDrawable(getResources().getDrawable(R.drawable.seekbar_process_drawable_orange));
+                        mSkbFinishPercent.setThumb(getResources().getDrawable(R.drawable.thumb_bar_orange));
                         break;
                     case RESEARCH_STATE_HAVE_STARTED:
                         mBtnStartResearch.setBackground(getResources().getDrawable(R.drawable.btn_bg));
-                        mBtnStartResearch.setTextColor(getResources().getColor(R.drawable.btn_text_color));
+                        mBtnStartResearch.setTextColor(getResources().getColorStateList(R.drawable.btn_text_color));
                         mBtnStartResearch.setText(getResources().getString(R.string.start_reseach));
                         mBtnStartResearch.setEnabled(true);
+                        mSkbFinishPercent.setProgressDrawable(getResources().getDrawable(R.drawable.seekbar_process_drawable_green));
+                        mSkbFinishPercent.setThumb(getResources().getDrawable(R.drawable.thumb_bar_green));
                         break;
                 }
                 holder.txt.setTextColor(color);

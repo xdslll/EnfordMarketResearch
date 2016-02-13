@@ -56,18 +56,6 @@ public class LoginActivity extends BaseActivity {
         //login();
 
         initListner();
-
-        autoLogin();
-    }
-
-    /**
-     * 自动登录
-     */
-    private void autoLogin() {
-        EnfordSystemUser user = SettingUtility.getDefaultUser();
-        if (user != null) {
-            login(user.getUsername(), user.getPassword());
-        }
     }
 
     private void initListner() {

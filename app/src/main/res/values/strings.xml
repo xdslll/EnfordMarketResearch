@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">市调APP</string>
+    <string name="app_name">商业市调APP</string>
     <string name="login">登录</string>
     <string name="login_user_hint">请输入工号</string>
     <string name="login_pwd_hint">请输入密码</string>
@@ -44,4 +44,15 @@
     <string name="loading">加载中......</string>
     <string name="have_finished">已完成%d%%</string>
     <string name="research_not_started">调研还未开始</string>
+    <string name="power_by">Powered By Enford Technology 2016</string>
+    <string name="category_code">分类码：%d</string>
+    <string name="count">(%d)</string>
+    <string name="size" formatted="false">规格：%s(%s)</string>
+    <string name="barcode">条形码：%s</string>
+    <string name="origin_price">原价：%s</string>
+    <string name="prompt_price">促销价：%s</string>
+    <string name="edit_price">修改价格</string>
+    <string name="add_price">填写价格</string>
+    <string name="add_price_error">添加价格失败，请重试</string>
+    <string name="add_price_input_error">价格输入有误，请检查后重试</string>
 </resources>
