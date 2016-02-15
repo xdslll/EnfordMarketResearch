@@ -32,6 +32,13 @@ import cz.msebera.android.httpclient.Header;
  */
 public final class HttpHelper implements Consts {
 
+    public static AsyncHttpClient createHttpClient() {
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.setTimeout(HTTP_TIMEOUT);
+        //client.setProxy(HTTP_PROXY_IP, HTTP_PROXY_PORT);
+        return client;
+    }
+
     /**
      * URL编码
      *
@@ -91,13 +98,6 @@ public final class HttpHelper implements Consts {
         return sb.toString();
     }
     
-    public static AsyncHttpClient createHttpClient() {
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setTimeout(HTTP_TIMEOUT);
-        //client.setProxy(HTTP_PROXY_IP, HTTP_PROXY_PORT);
-        return client;
-    }
-    
     public abstract static class JsonResponseHandler extends TextHttpResponseHandler {
 
         Context ctx;
@@ -111,6 +111,7 @@ public final class HttpHelper implements Consts {
         @Override
         public void onStart() {
             dlg = ProgressDialog.show(ctx, "", "加载中");
+            dlg.setCancelable(true);
         }
 
         @Override
@@ -273,11 +274,13 @@ public final class HttpHelper implements Consts {
             return API_URL_PREX + API_GET_COMMODITY;
         }
 
-        public static RequestParams createGetCommodityParam(int resId, int deptId, String barcode) {
+        public static RequestParams createGetCommodityParam(int resId, int deptId, String barcode, int page, int pageSize) {
             RequestParams params = new RequestParams();
             params.put("resId", resId);
             params.put("deptId", deptId);
             params.put("barcode", barcode);
+            params.put("page", page);
+            params.put("pageSize", pageSize);
             return params;
         }
 
@@ -419,11 +422,12 @@ public final class HttpHelper implements Consts {
     }
 
     public static void getCommodityByBarcode(Context ctx, int resId, int deptId, String barcode,
+                                             int page, int pageSize,
                                              TextHttpResponseHandler handler) {
         AsyncHttpClient client = createHttpClient();
         client.get(ctx,
                 ApiHelper.createGetCommodityUrl(),
-                ApiHelper.createGetCommodityParam(resId, deptId, barcode),
+                ApiHelper.createGetCommodityParam(resId, deptId, barcode, page, pageSize),
                 handler);
     }
 

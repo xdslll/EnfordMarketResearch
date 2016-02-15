@@ -12,6 +12,8 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -45,6 +47,8 @@ public class ResearchListActivity extends BaseUserActivity {
     TextView mTxtTitle, mTxtStartDate, mTxtEndDate,
             mTxtCodCount, mTxtDept, mTxtComp, mTxtHaveFinished;
     SeekBar mSkbFinishPercent;
+    LinearLayout mLayoutResearchList;
+    RelativeLayout mLayoutNoneResearch;
 
     int mTabPosition = 0;
     ResearchTabAdapter mAdapter;
@@ -88,10 +92,16 @@ public class ResearchListActivity extends BaseUserActivity {
         mTxtHaveFinished = (TextView) findViewById(R.id.research_list_finish_text);
         mTxtCodCount = (TextView) findViewById(R.id.research_list_cod_number);
         mSkbFinishPercent = (SeekBar) findViewById(R.id.research_list_finish_seekbar);
+        mLayoutResearchList = (LinearLayout) findViewById(R.id.research_list_layout);
+        mLayoutNoneResearch = (RelativeLayout) findViewById(R.id.research_list_none_layout);
 
         initListener();
+    }
 
-        getResearchDept();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        requestResearchDept();
     }
 
     private void initListener() {
@@ -124,13 +134,20 @@ public class ResearchListActivity extends BaseUserActivity {
                 startActivity(intent);
             }
         });
+
+        mLayoutNoneResearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                requestResearchDept();
+            }
+        });
     }
 
 
     /**
      * 请求市调清单数据
      */
-    private void getResearchDept() {
+    private void requestResearchDept() {
         HttpHelper.getResearchDept(mCtx,
                 String.valueOf(mUser.getDeptId()),
                 new HttpHelper.JsonResponseHandler(mCtx) {
@@ -150,23 +167,36 @@ public class ResearchListActivity extends BaseUserActivity {
      */
     private void handleResDept(Message msg) {
         String json = (String) msg.obj;
-        RespBody<List<EnfordApiMarketResearch>> resp =
+        RespBody<EnfordApiMarketResearch> resp =
                 FastJSONHelper.deserializeAny(json,
-                        new TypeReference<RespBody<List<EnfordApiMarketResearch>>>(){});
-        if (resp.getCode().equals(SUCCESS)) {
-            //获取市调清单数据
-            mResearchDeptList = resp.getData();
-            //获取市调清单数量
-            int count = resp.getTotalnum();
-            mTxtTitle.append("(" + count + ")");
-            //显示第一条数据的市调信息
-            EnfordApiMarketResearch apiResearch = mResearchDeptList.get(0);
-            showResearchDetail(apiResearch);
-            //显示TAB条
-            mAdapter = new ResearchTabAdapter(mCtx, mResearchDeptList);
-            mListSelectCommity.setAdapter(mAdapter);
+                        new TypeReference<RespBody<EnfordApiMarketResearch>>(){});
+        if (resp != null) {
+            if (resp.getCode().equals(SUCCESS)) {
+                //获取市调清单数据
+                mResearchDeptList = resp.getDatas();
+                //获取市调清单数量
+                int count = resp.getTotalnum();
+                mTxtTitle.setText(R.string.research_list_title);
+                mTxtTitle.append("(" + count + ")");
+                //显示第一条数据的市调信息
+                if (mResearchDeptList != null && mResearchDeptList.size() > 0) {
+                    EnfordApiMarketResearch apiResearch = mResearchDeptList.get(0);
+                    showResearchDetail(apiResearch);
+                    //显示TAB条
+                    mAdapter = new ResearchTabAdapter(mCtx, mResearchDeptList);
+                    mListSelectCommity.setAdapter(mAdapter);
+                    mLayoutResearchList.setVisibility(View.VISIBLE);
+                    mLayoutNoneResearch.setVisibility(View.GONE);
+                } else {
+                    //Toast.makeText(mCtx, R.string.research_list_none, Toast.LENGTH_SHORT).show();
+                    mLayoutResearchList.setVisibility(View.GONE);
+                    mLayoutNoneResearch.setVisibility(View.VISIBLE);
+                }
+            } else {
+                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+            }
         } else {
-            Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
         }
     }
 

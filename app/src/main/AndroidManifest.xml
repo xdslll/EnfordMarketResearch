@@ -56,6 +56,22 @@
             android:screenOrientation="portrait"/>
         <activity android:name=".activity.SettingsFeedbackActivity"
             android:screenOrientation="portrait"/>
+
+        <!--自动更新-->
+        <service
+            android:name="com.umeng.update.net.DownloadingService"
+            android:process=":DownloadingService" >
+        </service>
+        <activity
+            android:name="com.umeng.update.UpdateDialogActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
+        </activity>
+        <!--用户反馈-->
+        <activity
+            android:name="com.umeng.fb.ConversationActivity"
+            android:theme="@android:style/Theme.Holo.Light"/>
+        <meta-data android:value="56c12e6367e58e765e0012a0" android:name="UMENG_APPKEY"/>
+        <meta-data android:value="Channel ID" android:name="UMENG_CHANNEL"/>
     </application>
 
 </manifest>

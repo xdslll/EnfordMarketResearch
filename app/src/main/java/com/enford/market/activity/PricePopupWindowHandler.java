@@ -5,13 +5,15 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.TextUtils;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.PopupWindow;
 import android.widget.TextView;
@@ -163,7 +165,7 @@ public class PricePopupWindowHandler implements Consts {
                 default:
             }
             mTxtTitle.setText(mCommodity.getpName());
-            mPopupAddPrice.showAtLocation(view, Gravity.BOTTOM, 0, 0);
+            mPopupAddPrice.showAtLocation(view, Gravity.TOP, 0, 50);
         } else {
             dismissPopupWindow();
         }
@@ -205,7 +207,7 @@ public class PricePopupWindowHandler implements Consts {
         ColorDrawable dw = new ColorDrawable(0x00000000);
         mPopupAddPrice.setBackgroundDrawable(dw);
         mPopupAddPrice.setOutsideTouchable(true);
-        mPopupAddPrice.setAnimationStyle(R.style.PopupWindowAnimationStyle);
+        mPopupAddPrice.setAnimationStyle(R.style.PopupWindowAnimationStyle2);
 
         mBtnConfirm = (Button) view.findViewById(R.id.add_price_confirm);
         mTxtCancel = (TextView) view.findViewById(R.id.add_price_cancel);
@@ -219,14 +221,14 @@ public class PricePopupWindowHandler implements Consts {
         mBtnConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                sumbitPrice();
+                submitPrice();
             }
         });
 
         mTxtConfirm.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View v) {
-               sumbitPrice();
+               submitPrice();
            }
         });
 
@@ -237,8 +239,40 @@ public class PricePopupWindowHandler implements Consts {
             }
         });
 
+        mEdtOriginPrice.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEND) {
+                    submitPrice();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        mEdtPromptPrice.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_NEXT) {
+                    mEdtOriginPrice.requestFocus();
+                }
+                return false;
+            }
+        });
+
+        mEdtRemark.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEND) {
+                    submitPrice();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         //选中缺货状态，则不能填写促销价和原价
-        mCbkMissTag.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        /*mCbkMissTag.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
@@ -251,10 +285,10 @@ public class PricePopupWindowHandler implements Consts {
                     mEdtPromptPrice.setEnabled(true);
                 }
             }
-        });
+        });*/
     }
 
-    public void sumbitPrice() {
+    public void submitPrice() {
         if (mUser != null) {
             EnfordProductPrice price = null;
             if (mCommodity != null && mCommodity.getPrice() != null && mPriceTag == PRICE_UPDATE_TAG) {
@@ -275,15 +309,25 @@ public class PricePopupWindowHandler implements Consts {
                     price.setMiss(MISS_TAG_MISS);
                 } else {
                     price.setMiss(MISS_TAG_NOT_MISS);
+                }
+                if (!TextUtils.isEmpty(mEdtPromptPrice.getText())) {
                     Float promptPrice = Float.valueOf(mEdtPromptPrice.getText().toString());
-                    Float retailPrice = Float.valueOf(mEdtOriginPrice.getText().toString());
                     price.setPromptPrice(promptPrice);
+                }
+                if (!TextUtils.isEmpty(mEdtOriginPrice.getText())) {
+                    Float retailPrice = Float.valueOf(mEdtOriginPrice.getText().toString());
                     price.setRetailPrice(retailPrice);
                 }
                 String remark = mEdtRemark.getText().toString().trim();
                 price.setRemark(remark);
                 price.setUploadBy(mUser.getId());
                 price.setUploadDt(new Date());
+                //如果没有填写价格，则缺货状态必然不能为空
+                if (price.getPromptPrice() == null &&
+                        price.getRetailPrice() == null &&
+                        price.getMiss() == MISS_TAG_NOT_MISS) {
+                    throw new IllegalStateException("Wrong state!");
+                }
                 if (mPriceTag == PRICE_UPDATE_TAG) {
                     requestPriceUpdate(price);
                 } else if (mPriceTag == PRICE_ADD_TAG) {

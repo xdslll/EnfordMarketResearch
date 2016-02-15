@@ -22,6 +22,12 @@ import com.enford.market.helper.HttpHelper;
 import com.enford.market.helper.settinghelper.SettingUtility;
 import com.enford.market.model.EnfordSystemUser;
 import com.enford.market.model.RespBody;
+import com.enford.market.util.LogUtil;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.umeng.analytics.MobclickAgent;
+
+import java.lang.reflect.Type;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -35,6 +41,7 @@ public class LoginActivity extends BaseActivity {
 
     EditText mEdtUser, mEdtPwd;
     Button mBtnDoLogin;
+    EnfordSystemUser mUser;
 
     private static final int DRAWABLE_RIGHT = 2;
 
@@ -48,12 +55,11 @@ public class LoginActivity extends BaseActivity {
         mEdtPwd = (EditText) findViewById(R.id.login_edt_pwd);
         mBtnDoLogin = (Button) findViewById(R.id.login_dologin);
 
-        /**
-         * 测试语句
-         */
-        //mEdtUser.setText("0323");
-        //mEdtPwd.setText("test");
-        //login();
+        mUser = getIntent().getParcelableExtra("user");
+        if (mUser != null) {
+            mEdtUser.setText(mUser.getUsername());
+            mEdtPwd.setText(mUser.getPassword());
+        }
 
         initListner();
     }
@@ -92,26 +98,46 @@ public class LoginActivity extends BaseActivity {
 
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, String json) {
+                        LogUtil.e(json);
                         RespBody<EnfordSystemUser> resp = FastJSONHelper.deserializeAny(json, new TypeReference<RespBody<EnfordSystemUser>>() {});
                         if (resp != null) {
-                            if (resp.getCode().equals(SUCCESS)) {
-                                //保存登录用户信息
-                                SettingUtility.setDefaultUser(user, pwd);
-                                EnfordSystemUser enfordUser = resp.getData();
-                                //跳转到主界面
-                                finish();
-                                Intent intent = new Intent(mCtx, ResearchListActivity.class);
-                                intent.putExtra("user", enfordUser);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                startActivity(intent);
-                            } else {
-                                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
-                            }
+                            parseLogin(resp, json, user, pwd);
                         } else {
                             Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
                         }
                     }
-        });
+                });
+    }
+
+    private void parseLogin(RespBody<EnfordSystemUser> resp, String json, String user, String pwd) {
+        try {
+            if (resp.getCode().equals(SUCCESS)) {
+                //保存登录用户信息
+                SettingUtility.setDefaultUser(user, pwd);
+                EnfordSystemUser enfordUser = resp.getData();
+                //写入友盟统计
+                MobclickAgent.onProfileSignIn(user);
+                //跳转到主界面
+                gotoMainActivity(enfordUser);
+            } else {
+                Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
+            }
+        } catch (ClassCastException ex) {
+            Type type = new TypeToken<RespBody<EnfordSystemUser>>(){}.getType();
+            resp = new Gson().fromJson(json, type);
+            parseLogin(resp, json, user, pwd);
+        } catch (Exception ex) {
+            Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void gotoMainActivity(EnfordSystemUser enfordUser) {
+        //跳转到主界面
+        finish();
+        Intent intent = new Intent(mCtx, ResearchListActivity.class);
+        intent.putExtra("user", enfordUser);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
     }
 
     /**

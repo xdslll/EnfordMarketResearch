@@ -55,6 +55,8 @@ public class ResearchDetailActivity extends BaseUserActivity {
     EnfordProductCategory mRootCategory;
     List<EnfordProductCategory> mCategoryList;
 
+    int mPosition = 0;
+
     ResearchDetailHandler mHandler = new ResearchDetailHandler(this);
     public static final int REQUEST_GET_CATEGORY = 0x01;
     public static final int REQUEST_ADD_PRICE = 0x02;
@@ -114,22 +116,26 @@ public class ResearchDetailActivity extends BaseUserActivity {
             if (resp.getCode().equals(SUCCESS)) {
                 //获取分类数据
                 mCategoryList = resp.getDatas();
-                //填充ExpandableListView数据
-                mAdapter = new ResearchDetailAdapter(mCtx, mCategoryList);
-                mAdapter.setAddPriceListener(new ResearchDetailAdapter.OnAddPriceListener() {
+                if (mAdapter == null) {
+                    //填充ExpandableListView数据
+                    mAdapter = new ResearchDetailAdapter(mCtx, mCategoryList);
+                    mAdapter.setAddPriceListener(new ResearchDetailAdapter.OnAddPriceListener() {
 
-                    @Override
-                    public void onAddPriceListener(int position, EnfordProductCommodity cod) {
-                        mPricePopupHandler.setPosition(position);
-                        mPricePopupHandler.setResearchData(mResearch);
-                        mPricePopupHandler.setCommodityData(cod);
-                        mPricePopupHandler.setUser(mUser);
-                        mPricePopupHandler.showPopupWindow(mListResearchDetail);
-                    }
-                });
-
-                mListResearchDetail.setAdapter(mAdapter);
-
+                        @Override
+                        public void onAddPriceListener(int position, EnfordProductCommodity cod) {
+                            mPricePopupHandler.setPosition(position);
+                            mPricePopupHandler.setResearchData(mResearch);
+                            mPricePopupHandler.setCommodityData(cod);
+                            mPricePopupHandler.setUser(mUser);
+                            mPricePopupHandler.showPopupWindow(mListResearchDetail);
+                        }
+                    });
+                    mListResearchDetail.setAdapter(mAdapter);
+                } else {
+                    mAdapter.updateDatas(mCategoryList);
+                    mAdapter.parseAll();
+                    mAdapter.notifyDataSetChanged();
+                }
             } else {
                 Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
                 LogUtil.d(resp.getMsg());
@@ -172,6 +178,11 @@ public class ResearchDetailActivity extends BaseUserActivity {
         initBackButton();
         initListener();
         initData();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         requestCategory();
     }
@@ -207,26 +218,29 @@ public class ResearchDetailActivity extends BaseUserActivity {
         mTxtTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                mAdapter.showAll();
+                                break;
+                            case 1:
+                                mAdapter.showIncomplete();
+                                break;
+                            case 2:
+                                mAdapter.showComplete();
+                                break;
+                        }
+                        dialog.dismiss();
+                        mPosition = which;
+                        mTxtTitle.setText(mRootCategory.getName());
+                        mTxtTitle.append(String.format(getString(R.string.count), mAdapter.getCount()));
+                    }
+                };
                 new AlertDialog.Builder(mCtx)
-                        .setItems(new String[]{"全部", "未完成", "已完成"},
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        switch (which) {
-                                            case 0:
-                                                mAdapter.showAll();
-                                                break;
-                                            case 1:
-                                                mAdapter.showIncomplete();
-                                                break;
-                                            case 2:
-                                                mAdapter.showComplete();
-                                                break;
-                                        }
-                                        mTxtTitle.setText(mRootCategory.getName());
-                                        mTxtTitle.append(String.format(getString(R.string.count), mAdapter.getCount()));
-                                    }
-                                })
+                        .setSingleChoiceItems(
+                                new String[]{"全部", "未完成", "已完成"}, mPosition, listener)
                         .show();
             }
         });
@@ -295,4 +309,5 @@ public class ResearchDetailActivity extends BaseUserActivity {
         super.onBackPressed();
         mPricePopupHandler.dismissPopupWindow();
     }
+
 }

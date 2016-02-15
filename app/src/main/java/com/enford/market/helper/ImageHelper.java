@@ -27,13 +27,16 @@ public final class ImageHelper {
     int DEFALUT_THREAD_POOL_SIZE = 3;
     int DEFAULT_LRU_MEMORY_CACHE_SIZE = 20;
 
+    private static ImageLoader sImageLoader = null;
+
     private ImageHelper(Context c) {
         ImageLoaderConfiguration configuration = new ImageLoaderConfiguration.Builder(c)
                 .threadPoolSize(DEFALUT_THREAD_POOL_SIZE)
                 .memoryCache(new LruMemoryCache(DEFAULT_LRU_MEMORY_CACHE_SIZE))
                 //.writeDebugLogs()
                 .build();
-        ImageLoader.getInstance().init(configuration);
+        sImageLoader = ImageLoader.getInstance();
+        sImageLoader.init(configuration);
 
         mDefaultOptions = new DisplayImageOptions.Builder()
                 .cacheInMemory(true)
@@ -51,35 +54,39 @@ public final class ImageHelper {
     }
 
     public void displayImage(String url, ImageView img) {
-        ImageLoader.getInstance().displayImage(url, img, mDefaultOptions);
+        sImageLoader.displayImage(url, img, mDefaultOptions);
     }
 
     public void displayImage(String url, ImageView img, DisplayImageOptions options) {
-        ImageLoader.getInstance().displayImage(url, img, options);
+        sImageLoader.displayImage(url, img, options);
     }
 
     public void loadImage(String url, ImageLoadingListener listener) {
-        ImageLoader.getInstance().loadImage(url, mDefaultOptions, listener);
+        sImageLoader.loadImage(url, mDefaultOptions, listener);
     }
 
     public void loadImage(String url, ImageSize size, ImageLoadingListener listener) {
-        ImageLoader.getInstance().loadImage(url, size, mDefaultOptions, listener);
+        sImageLoader.loadImage(url, size, mDefaultOptions, listener);
     }
 
     public void loadImage(String url, ImageSize size, DisplayImageOptions options, ImageLoadingListener listener) {
-        ImageLoader.getInstance().loadImage(url, size, options, listener);
+        sImageLoader.loadImage(url, size, options, listener);
     }
 
     public ImageLoader getImageLoader() {
-        return ImageLoader.getInstance();
+        return sImageLoader;
     }
 
     public void clearDiskCache() {
-        ImageLoader.getInstance().clearDiskCache();
+        sImageLoader.clearDiskCache();
     }
 
     public PauseOnScrollListener getScrollListener() {
         return new PauseOnScrollListener(getImageLoader(), true, true);
     }
 
+    public static void clearCache() {
+        sImageLoader.clearDiskCache();
+        sImageLoader.clearMemoryCache();
+    }
 }

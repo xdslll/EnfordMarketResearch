@@ -1,18 +1,18 @@
 <resources>
-    <string name="app_name">商业市调APP</string>
+    <string name="app_name">市调APP</string>
     <string name="login">登录</string>
     <string name="login_user_hint">请输入工号</string>
     <string name="login_pwd_hint">请输入密码</string>
     <string name="login_error_empty_user_pwd">用户名或密码不能为空</string>
-    <string name="research_list_text">商品市调清单</string>
+    <string name="research_list_title">商品市调清单</string>
     <string name="research_list_start_date">开始时间</string>
     <string name="research_list_end_date">结束时间</string>
-    <string name="research_list_dept">调研门店</string>
+    <string name="research_list_dept">执行门店</string>
     <string name="research_list_comp">调研门店</string>
     <string name="research_list_cod_number">调研商品总数</string>
     <string name="research_list_finish_percent">完成进度</string>
     <string name="start_reseach">开始调研</string>
-    <string name="category_title_text">品类</string>
+    <string name="category_title">品类</string>
     <string name="research_list_item_add_price">填写价格</string>
     <string name="login_failed">用户名或密码错误，请重试</string>
     <string name="research_list_item_edit_price">修改价格</string>
@@ -56,4 +56,13 @@
     <string name="add_price_error">添加价格失败，请重试</string>
     <string name="add_price_input_error">价格输入有误，请检查后重试</string>
     <string name="research_list_exe">执行门店</string>
+    <string name="login_failed_none_dept">登录失败，缺少部门信息</string>
+    <string name="research_list_none">暂无市调清单，点击屏幕刷新</string>
+    <string name="auto_login_error">自动登录失败，请重试</string>
+    <string name="scan_result_title">扫描结果</string>
+    <string name="next">下一项</string>
+    <string name="empty_text">暂无数据</string>
+    <string name="clear_cache_success">清理缓存成功</string>
+    <string name="copy_right">商业市调APP v1.0</string>
+    <string name="finish_percent" formatted="false">(%d/%d)</string>
 </resources>

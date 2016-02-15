@@ -78,6 +78,8 @@
             android:textSize="12sp"
             android:singleLine="true"
             android:inputType="numberDecimal"
+            android:imeOptions="actionNext"
+            android:imeActionLabel="@string/next"
             android:id="@+id/add_price_prompt_price"
             />
     </LinearLayout>
@@ -106,6 +108,8 @@
             android:textSize="12sp"
             android:singleLine="true"
             android:inputType="numberDecimal"
+            android:imeOptions="actionSend"
+            android:imeActionLabel="@string/submit"
             android:id="@+id/add_price_origin_price"
             />
     </LinearLayout>
@@ -135,6 +139,8 @@
             android:minLines="5"
             android:maxLines="5"
             android:gravity="start|top"
+            android:imeOptions="actionSend"
+            android:imeActionLabel="@string/submit"
             android:id="@+id/add_price_remark"
             />
     </LinearLayout>

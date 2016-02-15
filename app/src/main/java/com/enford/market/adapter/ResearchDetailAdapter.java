@@ -36,6 +36,14 @@ public class ResearchDetailAdapter extends BaseAdapter implements
         mCommodityList.get(position).setPrice(price);
     }
 
+    public void updateData(List<EnfordProductCommodity> commodityList) {
+        this.mCommodityList = commodityList;
+    }
+
+    public void updateDatas(List<EnfordProductCategory> categoryList) {
+        this.mCategoryList = categoryList;
+    }
+
     public void showAll() {
         parseAll();
         notifyDataSetChanged();

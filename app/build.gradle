@@ -1,15 +1,15 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 19
+    compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
     defaultConfig {
         applicationId "com.enford.market"
         minSdkVersion 17
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "0.3"
     }
     buildTypes {
         release {
@@ -32,4 +32,9 @@ dependencies {
     compile 'com.google.zxing:zxingorg:3.2.1'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.5'
     compile 'com.google.code.gson:gson:2.6.1'
+    compile 'com.umeng.analytics:analytics:latest.integration'
+    compile 'com.umeng:fb:5.4.0'
+    compile project(':library')
+    compile 'com.android.support:support-v4:23.1.1'
+    compile files('libs/umeng-update-v2.6.0.1.jar')
 }

@@ -1,33 +1,26 @@
 package com.enford.market.activity;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Message;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.alibaba.fastjson.TypeReference;
 import com.enford.market.R;
 import com.enford.market.activity.scan.ScanCaptureActivity;
+import com.enford.market.adapter.CategoryAdapter;
 import com.enford.market.helper.FastJSONHelper;
 import com.enford.market.helper.HttpHelper;
-import com.enford.market.helper.ImageHelper;
 import com.enford.market.model.EnfordApiMarketResearch;
 import com.enford.market.model.EnfordProductCategory;
 import com.enford.market.model.RespBody;
 import com.enford.market.util.LogUtil;
-import com.nostra13.universalimageloader.core.listener.SimpleImageLoadingListener;
 
 import java.util.List;
 
@@ -71,20 +64,25 @@ public class CategoryActivity extends BaseUserActivity {
 
     private void handleRootCategory(Message msg) {
         String json = (String) msg.obj;
-        RespBody<List<EnfordProductCategory>> resp =
+        RespBody<EnfordProductCategory> resp =
                 FastJSONHelper.deserializeAny(json,
-                        new TypeReference<RespBody<List<EnfordProductCategory>>>() {
-                        });
+                        new TypeReference<RespBody<EnfordProductCategory>>() {});
         if (resp != null) {
             if (resp.getCode().equals(SUCCESS)) {
                 //获取分类数据
-                mCategoryList = resp.getData();
+                mCategoryList = resp.getDatas();
                 //获取分类数量
                 int count = resp.getTotalnum();
+                mTxtTitle.setText(R.string.category_title);
                 mTxtTitle.append("(" + count + ")");
-                //填充GridView数据
-                mAdapter = new CategoryAdapter(mCtx, mCategoryList);
-                mGridCategory.setAdapter(mAdapter);
+                if (mAdapter == null) {
+                    //填充GridView数据
+                    mAdapter = new CategoryAdapter(mCtx, mCategoryList);
+                    mGridCategory.setAdapter(mAdapter);
+                } else {
+                    mAdapter.updateData(mCategoryList);
+                    mAdapter.notifyDataSetChanged();
+                }
             } else {
                 Toast.makeText(mCtx, resp.getMsg(), Toast.LENGTH_SHORT).show();
                 LogUtil.d(resp.getMsg());
@@ -107,6 +105,11 @@ public class CategoryActivity extends BaseUserActivity {
 
         initBackButton();
         initListener();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
 
         getRootCategory();
     }
@@ -149,68 +152,5 @@ public class CategoryActivity extends BaseUserActivity {
                         msg.sendToTarget();
                     }
                 });
-    }
-
-    public class CategoryAdapter extends BaseAdapter {
-
-        List<EnfordProductCategory> categoryList;
-        Context ctx;
-
-        public CategoryAdapter(Context ctx, List<EnfordProductCategory> categoryList) {
-            this.ctx = ctx;
-            this.categoryList = categoryList;
-        }
-
-        @Override
-        public int getCount() {
-            return categoryList.size();
-        }
-
-        @Override
-        public EnfordProductCategory getItem(int position) {
-            return categoryList.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            final CategoryViewHolder holder;
-            if (convertView == null) {
-                holder = new CategoryViewHolder();
-                LayoutInflater inflater = LayoutInflater.from(ctx);
-                convertView = inflater.inflate(R.layout.category_list_item, null);
-                holder.categoryIcon = (ImageView) convertView.findViewById(R.id.category_list_item_icon);
-                holder.categoryName = (TextView) convertView.findViewById(R.id.category_list_item_name);
-                holder.categoryCode = (TextView) convertView.findViewById(R.id.category_list_item_code);
-                holder.categoryFinishPercent = (TextView) convertView.findViewById(R.id.category_list_item_finish_percent);
-                convertView.setTag(holder);
-            } else {
-                holder = (CategoryViewHolder) convertView.getTag();
-            }
-            EnfordProductCategory category = getItem(position);
-            holder.categoryName.setText(category.getName());
-            holder.categoryName.append(String.format(getString(R.string.count),
-                    category.getCodCount() == null ? 0 : category.getCodCount()));
-            holder.categoryCode.setText(String.format(getString(R.string.category_code), category.getCode()));
-            holder.categoryFinishPercent.setText(String.format(getString(R.string.have_finished),
-                    category.getHaveFinished() == null ? 0 : category.getHaveFinished()));
-            String imgUrl = HttpHelper.getCategoryImageUrl(category.getCode());
-            ImageHelper.getInstance(ctx).loadImage(imgUrl, new SimpleImageLoadingListener() {
-                @Override
-                public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
-                    holder.categoryIcon.setImageBitmap(loadedImage);
-                }
-            });
-            return convertView;
-        }
-    }
-
-    public static class CategoryViewHolder {
-        public ImageView categoryIcon;
-        public TextView categoryName, categoryCode, categoryFinishPercent;
     }
 }

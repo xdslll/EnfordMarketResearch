@@ -40,15 +40,9 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.alibaba.fastjson.TypeReference;
 import com.enford.market.R;
 import com.enford.market.activity.BaseUserActivity;
-import com.enford.market.activity.PricePopupWindowHandler;
-import com.enford.market.helper.FastJSONHelper;
-import com.enford.market.helper.HttpHelper;
 import com.enford.market.model.EnfordApiMarketResearch;
-import com.enford.market.model.EnfordProductCommodity;
-import com.enford.market.model.RespBody;
 import com.enford.market.qrcode.camera.CameraManager;
 import com.enford.market.qrcode.decode.BitmapDecoder;
 import com.enford.market.qrcode.decode.DecodeThread;
@@ -57,15 +51,12 @@ import com.enford.market.qrcode.utils.BitmapUtils;
 import com.enford.market.qrcode.utils.CaptureActivityHandler;
 import com.enford.market.qrcode.utils.InactivityTimer;
 import com.enford.market.util.Consts;
-import com.enford.market.util.LogUtil;
 import com.google.zxing.Result;
 import com.google.zxing.client.result.ResultParser;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-
-import cz.msebera.android.httpclient.Header;
 
 /**
  * This activity opens the camera and does the actual scanning on a background
@@ -84,9 +75,9 @@ public final class ScanCaptureActivity extends BaseUserActivity
 	private static final int REQUEST_CODE = 100;
 	private static final int PARSE_BARCODE_FAIL = 300;
 	private static final int PARSE_BARCODE_SUC = 200;
-	public static final int SCAN_COMMODITY_SUCCESS = 400;
-	public static final int REQUEST_ADD_PRICE = 500;
-	public static final int REQUEST_UPDATE_PRICE = 600;
+	//public static final int SCAN_COMMODITY_SUCCESS = 400;
+	//public static final int REQUEST_ADD_PRICE = 500;
+	//public static final int REQUEST_UPDATE_PRICE = 600;
 
 	private CameraManager cameraManager;
 	private CaptureActivityHandler handler;
@@ -103,9 +94,6 @@ public final class ScanCaptureActivity extends BaseUserActivity
 	private boolean isFlashlightOpen;
 
 	private EnfordApiMarketResearch mResearch;
-	private EnfordProductCommodity mCommodity;
-	private PricePopupWindowHandler mPricePopupHandler;
-
 	/**
 	 * 图片的路径
 	 */
@@ -129,13 +117,14 @@ public final class ScanCaptureActivity extends BaseUserActivity
 					/*Toast.makeText(activityReference.get(),
 							"解析成功，结果为：" + msg.obj, Toast.LENGTH_SHORT).show();*/
 					String barcode = (String) msg.obj;
-					activity.requestGetCommodity(barcode, activity);
+                    activity.gotoScanResult(barcode);
+					//activity.requestGetCommodity(barcode, activity);
 					break;
 				case PARSE_BARCODE_FAIL:// 解析图片失败
 					Toast.makeText(activityReference.get(), "解析图片失败",
 							Toast.LENGTH_SHORT).show();
 					break;
-				case SCAN_COMMODITY_SUCCESS:
+				/*case SCAN_COMMODITY_SUCCESS:
 					activity.handleGetCommodity(msg);
 					break;
 				case REQUEST_ADD_PRICE:
@@ -143,7 +132,7 @@ public final class ScanCaptureActivity extends BaseUserActivity
 					break;
 				case REQUEST_UPDATE_PRICE:
 					activity.handlePriceResponse(msg);
-					break;
+					break;*/
 				default:
 					break;
 			}
@@ -155,7 +144,7 @@ public final class ScanCaptureActivity extends BaseUserActivity
 		return handler;
 	}
 
-	private void requestGetCommodity(String barcode, final ScanCaptureActivity activity) {
+	/*private void requestGetCommodity(String barcode, final ScanCaptureActivity activity) {
 		int resId = activity.mResearch.getResearch().getId();
 		int deptId = activity.mResearch.getDept().getId();
 		HttpHelper.getCommodityByBarcode(activity.mCtx,
@@ -207,7 +196,7 @@ public final class ScanCaptureActivity extends BaseUserActivity
 		} else {
 			Toast.makeText(mCtx, R.string.unknown_error, Toast.LENGTH_SHORT).show();
 		}
-	}
+	}*/
 
 	public CameraManager getCameraManager() {
 		return cameraManager;
@@ -251,7 +240,6 @@ public final class ScanCaptureActivity extends BaseUserActivity
 
 		initBackButton();
 
-		mPricePopupHandler = new PricePopupWindowHandler(mCtx, mHandler);
 	}
 
 	@Override
@@ -350,13 +338,14 @@ public final class ScanCaptureActivity extends BaseUserActivity
 		inactivityTimer.onActivity();
 		beepManager.playBeepSoundAndVibrate();
 
-		bundle.putInt("width", mCropRect.width());
+		/*bundle.putInt("width", mCropRect.width());
 		bundle.putInt("height", mCropRect.height());
-		bundle.putString("result", rawResult.getText());
+		bundle.putString("result", rawResult.getText());*/
 
 		//startActivity(new Intent(ScanCaptureActivity.this, ScanResultActivity.class).putExtras(bundle));
 		//mPricePopupHandler.showPopupWindow(scanPreview);
-		requestGetCommodity(rawResult.getText(), this);
+		//requestGetCommodity(rawResult.getText(), this);
+        gotoScanResult(rawResult.getText());
 	}
 
 	private void initCamera(SurfaceHolder surfaceHolder) {
@@ -547,9 +536,12 @@ public final class ScanCaptureActivity extends BaseUserActivity
 		}
 	}
 
-	@Override
-	public void onBackPressed() {
-		super.onBackPressed();
-		mPricePopupHandler.dismissPopupWindow();
-	}
+	private void gotoScanResult(String result) {
+        Intent intent = new Intent(mCtx, ScanResultActivity.class);
+        intent.putExtra("user", mUser);
+        intent.putExtra("research", mResearch);
+        intent.putExtra("result", result);
+        startActivity(intent);
+    }
+
 }

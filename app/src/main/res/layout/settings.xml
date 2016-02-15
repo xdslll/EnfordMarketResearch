@@ -57,7 +57,6 @@
             android:layout_marginEnd="15dp"
             android:drawableEnd="@drawable/settings_select"
             android:gravity="center"
-            android:text="1.68MB"
             />
     </RelativeLayout>
     <View

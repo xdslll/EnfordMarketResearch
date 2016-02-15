@@ -12,8 +12,9 @@ public interface Consts {
     public static final int HTTP_PROXY_PORT = 8888;
 
     //public static final String API_URL_PREX = "http://192.168.1.2:8080";
-    public static final String API_URL_PREX = "http://192.168.31.130:8080";
+    //public static final String API_URL_PREX = "http://192.168.31.130:8080";
     //public static final String API_URL_PREX = "http://192.168.43.175:8080";
+    public static final String API_URL_PREX = "http://139.196.49.240/sg";
     public static final String API_LOGIN = "/api/login/";
     public static final String API_RESEARCH_DEPT = "/api/market/dept/get";
     public static final String API_ROOT_CATEGORY = "/api/category/root";
